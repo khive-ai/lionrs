@@ -88,6 +88,8 @@ import Lion.Composition.StructuralDefs        -- Shared structural invariant def
 import Lion.Composition.StructuralInvariants  -- A9/A10: HeldCapsOwnedCorrectly/InTable proofs
 import Lion.Composition.Bridge                -- SystemInvariant ↔ ComponentSafe bridge
 import Lion.Composition.AttackCoverage        -- Attack coverage traceability theorem
+import Lion.Composition.PolicyWorkflowBridge  -- Policy ↔ Workflow ↔ Composition bridges
+import Lion.Composition.EndToEnd              -- v1 ch5.3: End-to-End Correctness Capstone
 
 -- khive-deploy proofs
 import Lion.Deploy.ContextPropagation  -- ADR-003: Context propagation

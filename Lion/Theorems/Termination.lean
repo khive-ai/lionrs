@@ -22,19 +22,51 @@ namespace Lion
 
 /-! =========== DAG VALIDITY =========== -/
 
-/-- Check if path exists from node a to node b through edges -/
-def has_path (edges : List Edge) (a b : Nat) : Bool :=
-  -- Direct edge
-  edges.any (fun e => e.from_ = a && e.to_ = b) ||
-  -- Transitive (one intermediate step - simplified for decidability)
-  edges.any (fun e1 =>
-    e1.from_ = a &&
-    edges.any (fun e2 => e2.from_ = e1.to_ && e2.to_ = b))
+/--
+**has_path_fuel**: Check if path exists from `start` to `target` through edges.
 
-/-- A workflow DAG is valid if it has no cycles.
-    For each edge (a -> b), there is no path from b back to a. -/
+Uses bounded DFS with fuel parameter for termination.
+- `fuel`: Maximum number of nodes we can visit (typically |nodes|)
+- `visited`: Nodes already seen on this path (cycle detection)
+
+This correctly detects cycles of ANY length, unlike the previous 1-2 step check.
+
+Termination: `fuel` strictly decreases on each recursive call.
+Correctness: If path exists with length <= fuel, returns true.
+-/
+def has_path_fuel (edges : List Edge) (start target : Nat)
+    (fuel : Nat) (visited : List Nat) : Bool :=
+  -- Base case: found target
+  if start = target then true
+  -- Fuel exhausted: no path found within bounds
+  else if fuel = 0 then false
+  -- Already visited: cycle detected on this path, don't continue
+  else if start ∈ visited then false
+  else
+    -- Explore all outgoing edges from `start`
+    let new_visited := start :: visited
+    edges.any (fun e =>
+      e.from_ = start &&
+      has_path_fuel edges e.to_ target (fuel - 1) new_visited)
+termination_by fuel
+
+/--
+**has_path**: Main entry point for path checking.
+
+Starts with fuel = |nodes| (maximum path length in a DAG).
+Empty visited set (fresh traversal).
+-/
+def has_path (wf : WorkflowDef) (a b : Nat) : Bool :=
+  has_path_fuel wf.edges a b wf.nodes.length []
+
+/--
+A workflow DAG is valid if it has no cycles.
+For each edge (a -> b), there is no path from b back to a.
+
+Uses correct has_path that detects cycles of ANY length.
+-/
 def valid_dag (wf : WorkflowDef) : Prop :=
-  wf.edges.all (fun e => !has_path wf.edges e.to_ e.from_) = true
+  wf.edges.all (fun e => !has_path wf e.to_ e.from_) = true
 
 /-- Decidable instance for valid_dag -/
 instance : Decidable (valid_dag wf) := inferInstanceAs (Decidable (_ = true))

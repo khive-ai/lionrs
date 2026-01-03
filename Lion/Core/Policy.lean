@@ -129,6 +129,56 @@ theorem or_policy_absorption (p q : PolicyDecision) :
     or_policy p (and_policy p q) = p := by
   cases p <;> cases q <;> rfl
 
+/-! #### Distributivity Laws (Boolean Algebra Completion) -/
+
+/--
+Distributivity of AND over OR (Kleene three-valued logic).
+p AND (q OR r) = (p AND q) OR (p AND r)
+-/
+theorem and_or_distrib (p q r : PolicyDecision) :
+    and_policy p (or_policy q r) = or_policy (and_policy p q) (and_policy p r) := by
+  cases p <;> cases q <;> cases r <;> rfl
+
+/--
+Distributivity of OR over AND (Kleene three-valued logic).
+p OR (q AND r) = (p OR q) AND (p OR r)
+-/
+theorem or_and_distrib (p q r : PolicyDecision) :
+    or_policy p (and_policy q r) = and_policy (or_policy p q) (or_policy p r) := by
+  cases p <;> cases q <;> cases r <;> rfl
+
+/-! #### Complement Laws (Three-Valued - Excluded Middle Fails!) -/
+
+/--
+Complement under AND: p AND (NOT p).
+In Kleene logic: indet AND indet = indet (NOT deny!)
+-/
+theorem and_complement (p : PolicyDecision) :
+    and_policy p (not_policy p) = match p with
+      | .permit => .deny
+      | .deny => .deny
+      | .indeterminate => .indeterminate := by
+  cases p <;> rfl
+
+/--
+Complement under OR: p OR (NOT p).
+In Kleene logic: indet OR indet = indet (NOT permit! - excluded middle fails)
+-/
+theorem or_complement (p : PolicyDecision) :
+    or_policy p (not_policy p) = match p with
+      | .permit => .permit
+      | .deny => .permit
+      | .indeterminate => .indeterminate := by
+  cases p <;> rfl
+
+/-- Law of Excluded Middle fails for indeterminate (three-valued logic) -/
+theorem excluded_middle_fails_indet :
+    or_policy .indeterminate (not_policy .indeterminate) ≠ .permit := by decide
+
+/-- Law of Non-Contradiction fails for indeterminate (three-valued logic) -/
+theorem non_contradiction_fails_indet :
+    and_policy .indeterminate (not_policy .indeterminate) ≠ .deny := by decide
+
 /-! #### De Morgan's Laws (v1 ch4-6 L53-54) -/
 
 theorem not_and_demorgan (p q : PolicyDecision) :
