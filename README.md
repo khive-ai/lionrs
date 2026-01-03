@@ -1,2 +1,3 @@
-# lionrs
-Capability security framework
+# Lionrs: Capability-Bounded Autonomous Reasoning
+
+> A Formally Verified Agentic System
