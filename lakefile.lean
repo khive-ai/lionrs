@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package «lionrs» where
-  version := v!"2.0.0"
+  version := v!"2.1.0"
   preferReleaseBuild := true
 
 require mathlib from git
