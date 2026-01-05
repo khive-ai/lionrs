@@ -7,6 +7,8 @@ Security lattice for information flow control (Theorem 011).
 -/
 
 import Mathlib.Order.Basic
+import Mathlib.Order.BoundedOrder.Basic
+import Mathlib.Order.Lattice
 import Mathlib.Data.Nat.Basic
 
 namespace Lion
@@ -90,6 +92,50 @@ theorem meet_le_left (l₁ l₂ : SecurityLevel) : meet l₁ l₂ ≤ l₁ := by
 
 theorem meet_le_right (l₁ l₂ : SecurityLevel) : meet l₁ l₂ ≤ l₂ := by
   cases l₁ <;> cases l₂ <;> native_decide
+
+/-! ### Mathlib4 Lattice Instances
+
+The following instances integrate SecurityLevel with Mathlib's order hierarchy.
+
+Sources:
+- Mathlib/Order/BoundedOrder/Basic.lean: OrderBot, OrderTop, BoundedOrder
+- Mathlib/Order/Lattice.lean: Lattice, DistribLattice (auto-derived from LinearOrder)
+- LinearOrder automatically provides Lattice/DistribLattice via max/min as sup/inf
+-/
+
+/-- OrderBot instance: Public is the bottom element of the security lattice.
+    Required: bot element and proof that bot ≤ x for all x. -/
+instance : OrderBot SecurityLevel where
+  bot := .Public
+  bot_le := bot_le
+
+/-- OrderTop instance: Secret is the top element of the security lattice.
+    Required: top element and proof that x ≤ top for all x. -/
+instance : OrderTop SecurityLevel where
+  top := .Secret
+  le_top := le_top
+
+/-- BoundedOrder: SecurityLevel has both top and bottom elements.
+    Constructed from the OrderBot and OrderTop instances above.
+    See: Mathlib/Order/BoundedOrder/Basic.lean -/
+instance : BoundedOrder SecurityLevel where
+  toOrderTop := inferInstance
+  toOrderBot := inferInstance
+
+/-- Lattice and DistribLattice instances are automatically derived from LinearOrder.
+
+    In Mathlib4, any LinearOrder is automatically a DistribLattice:
+    - sup a b = max a b (from LinearOrder)
+    - inf a b = min a b (from LinearOrder)
+    - The distributive law a ⊔ (b ⊓ c) = (a ⊔ b) ⊓ (a ⊔ c) holds in any chain.
+
+    See: Mathlib/Order/Lattice.lean line ~550:
+      instance (priority := 100) {α : Type u} [LinearOrder α] : DistribLattice α
+
+    These are available via inferInstance - we note them here for documentation.
+-/
+example : Lattice SecurityLevel := inferInstance
+example : DistribLattice SecurityLevel := inferInstance
 
 end SecurityLevel
 

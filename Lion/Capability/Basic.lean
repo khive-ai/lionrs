@@ -95,7 +95,7 @@ structure TrackedDerivation (tc₁ tc₂ : TrackedCapability) : Prop where
   cap_derives : tc₁.cap.parent = some tc₂.cap.id ∨ tc₁.cap = tc₂.cap
   /-- Use count never decreases -/
   use_count_le : tc₂.use_count ≤ tc₁.use_count
-  /-- If parent has finite limit n, child has finite limit m ≤ n (Option B from ChatGPT) -/
+  /-- If parent has finite limit n, child has finite limit m ≤ n -/
   max_uses_mono : ∀ n, tc₂.max_uses = some n → ∃ m, tc₁.max_uses = some m ∧ m ≤ n
 
 /-- Well-formed tracked capability table -/

@@ -28,6 +28,9 @@ import Lion.Core.Rights
 import Lion.Core.Policy
 import Lion.Core.Crypto
 import Lion.Core.RuntimeIsolation
+import Lion.Core.HashMapLemmas
+import Lion.Core.CountPGeneral
+import Lion.Core.CountPLemmas
 
 import Lion.State.Memory
 import Lion.State.Plugin
@@ -44,17 +47,27 @@ import Lion.Step.Step
 import Lion.Step.Footprint
 import Lion.Step.HostCallFootprint  -- Q13: Fine-grained footprint for correspondence
 
+-- Tactic automation
+import Lion.Tactic.Footprint
+import Lion.Tactic.FrameCases
+import Lion.Tactic.StepCases
+
 import Lion.Theorems.Mediation
+import Lion.Theorems.MediationRules
 import Lion.Theorems.PolicySoundness
+import Lion.Theorems.PolicySoundnessRules
 import Lion.Theorems.Unforgeability
 import Lion.Theorems.SpatialSafety
 import Lion.Theorems.IntegrityNoninterference
 import Lion.Theorems.TemporalSafety
+import Lion.Theorems.TemporalSafetyRules
 import Lion.Theorems.DeadlockFreedom
 import Lion.Theorems.Confinement
 import Lion.Theorems.Attenuation           -- Authority algebra, attenuation theorems
 import Lion.Theorems.WorkflowAlgebra       -- Workflow composition algebra (v1 Theorem 4.5)
 import Lion.Theorems.Noninterference
+import Lion.Theorems.NoninterferenceBase
+import Lion.Theorems.NoninterferenceRules
 import Lion.Theorems.StutteringBisimulation  -- A11-A12: Stuttering bisimulation for TINI
 import Lion.Theorems.Revocation
 import Lion.Theorems.Termination
@@ -78,6 +91,7 @@ import Lion.Contracts.StepAffects
 import Lion.Contracts.MemContract
 import Lion.Contracts.CapContract
 import Lion.Contracts.PolicyContract
+import Lion.Contracts.AuthContract
 import Lion.Contracts.AllContracts
 import Lion.Composition.SystemInvariant
 import Lion.Composition.SecurityComposition
@@ -90,18 +104,3 @@ import Lion.Composition.Bridge                -- SystemInvariant ↔ ComponentSa
 import Lion.Composition.AttackCoverage        -- Attack coverage traceability theorem
 import Lion.Composition.PolicyWorkflowBridge  -- Policy ↔ Workflow ↔ Composition bridges
 import Lion.Composition.EndToEnd              -- v1 ch5.3: End-to-End Correctness Capstone
-
--- khive-deploy proofs
-import Lion.Deploy.ContextPropagation  -- ADR-003: Context propagation
-import Lion.Deploy.WasmSafety          -- ADR-002: WASM memory bounds & isolation
-import Lion.Deploy.BatchExecution      -- ADR-002: Batch termination & order
-import Lion.Deploy.Authorization       -- ADR-003: Scope-based authorization
-
--- Refinement proofs (Rust ↔ Lean correspondence)
-import Lion.Refinement.Correspondence  -- Type correspondence relations
-import Lion.Refinement.Authorization   -- Authorization refinement (4 axioms, 0 sorries)
-import Lion.Refinement.HostCall        -- HostCall refinement (2 axioms, 0 sorries)
-import Lion.Refinement.KernelOp        -- KernelOp refinement (1 axiom, 0 sorries)
-import Lion.Refinement.PluginInternal  -- PluginInternal refinement (1 axiom, 0 sorries)
-import Lion.Refinement.Step            -- Full system refinement (8 axioms total, 0 sorries)
-import Lion.Refinement.Memory          -- Memory refinement (2 axioms, 0 sorries)

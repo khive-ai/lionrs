@@ -22,7 +22,6 @@ Architecture integration:
 - Used by: Complete Mediation, Resource exhaustion prevention
 
 STATUS: COMPLETE - All proofs verified with 0 sorries, 0 axioms.
-Note: Fixed TrackedDerivation constraint using ChatGPT's Option B (max_uses_mono).
 -/
 
 import Lion.Capability.Basic
