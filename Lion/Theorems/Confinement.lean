@@ -41,7 +41,7 @@ open Lion
 -- Finset already has semilattice instances, we verify the properties.
 
 /-- Intersection is idempotent: r ∩ r = r -/
-theorem rights_idempotent (r : Rights) : r ∩ r = r :=
+@[simp] theorem rights_idempotent (r : Rights) : r ∩ r = r :=
   Finset.inter_self r
 
 /-- Intersection is commutative: r1 ∩ r2 = r2 ∩ r1 -/
@@ -53,15 +53,15 @@ theorem rights_associative (r₁ r₂ r₃ : Rights) : (r₁ ∩ r₂) ∩ r₃ 
   Finset.inter_assoc r₁ r₂ r₃
 
 /-- Intersection is a lower bound (left): r1 ∩ r2 ⊆ r1 -/
-theorem rights_inf_le_left (r₁ r₂ : Rights) : r₁ ∩ r₂ ⊆ r₁ :=
+@[simp] theorem rights_inf_le_left (r₁ r₂ : Rights) : r₁ ∩ r₂ ⊆ r₁ :=
   Finset.inter_subset_left
 
 /-- Intersection is a lower bound (right): r1 ∩ r2 ⊆ r2 -/
-theorem rights_inf_le_right (r₁ r₂ : Rights) : r₁ ∩ r₂ ⊆ r₂ :=
+@[simp] theorem rights_inf_le_right (r₁ r₂ : Rights) : r₁ ∩ r₂ ⊆ r₂ :=
   Finset.inter_subset_right
 
 /-- Empty rights is the bottom element -/
-theorem rights_bottom_le (r : Rights) : (∅ : Rights) ⊆ r :=
+@[simp] theorem rights_bottom_le (r : Rights) : (∅ : Rights) ⊆ r :=
   Finset.empty_subset r
 
 /-- Full rights is the top element -/

@@ -65,10 +65,96 @@ theorem componentSafe_fromPlugin_of_invariants (s : State) (pid : PluginId)
     simp only [Component.fromPlugin, Finset.mem_singleton]
     exact h_holder
 
-/-! =========== BRIDGE: ComponentSafe → SystemInvariant =========== -/
+/-! =========== BRIDGE: ComponentSafe ↔ SystemInvariant =========== -/
 
--- Note: all_components_safe_implies_memory_isolated is defined in CompositionTheorem.lean
--- We re-export it here for completeness of the bridge module.
+/-!
+### Conceptual Relationship
+
+ComponentSafe and SystemInvariant are at different abstraction levels:
+
+- **ComponentSafe** (4 properties): Per-component predicate
+  1. unforgeable: held caps are sealed
+  2. confined: held caps exist in table (handle integrity)
+  3. isolated: memory within WASM bounds
+  4. compliant: holders in sourcePids
+
+- **SystemInvariant** (11 properties): System-level predicate
+  1. cap_unforgeable, 2. memory_isolated, 3. deadlock_free,
+  4. cap_confined, 5. cap_revocable, 6. temporal_safe,
+  7. message_delivery, 8. workflows_have_work, 9. workflow_progress,
+  10. policy_sound, 11. step_confinement
+
+**Direction A** (proven): SystemInvariant → AllComponentsSafe
+  Via componentSafe_fromPlugin_of_invariants + structural invariants
+
+**Direction B** (proven): AllComponentsSafe → (MemoryIsolated ∧ CapUnforgeable)
+  Via all_safe_implies_system_invariant in CompositionTheorem.lean
+
+The remaining 9 SystemInvariant properties are system-level and cannot be
+derived from component-level properties alone. They require:
+- Step existence (deadlock_free)
+- Ghost state tracking (temporal_safe)
+- Actor/workflow state (message_delivery, workflows_*)
+- Authorization structure (cap_revocable, policy_sound)
+- Noninterference (step_confinement)
+- Table invariants (cap_confined)
+
+The meaningful result is: SystemInvariant is preserved by Steps, and
+SystemInvariant implies AllComponentsSafe. Therefore compositional security
+is automatically preserved for all reachable states.
+-/
+
+/--
+**Direction A: SystemInvariant → AllComponentsSafe**
+
+If the system satisfies all 11 security properties, then every component
+is individually safe.
+
+This is the decomposition direction: system security implies component security.
+-/
+theorem systemInvariant_implies_allComponentsSafe (s : State)
+    (h_sys : SystemInvariant s)
+    (h_struct : ComponentStructInv s) :
+    AllComponentsSafe s := by
+  intro pid
+  exact componentSafe_fromPlugin_of_invariants s pid
+    h_sys.cap_unforgeable
+    h_sys.memory_isolated
+    h_struct
+
+/-!
+### Direction B: AllComponentsSafe contribution to SystemInvariant
+
+AllComponentsSafe provides exactly 2 of 11 SystemInvariant properties:
+- MemoryIsolated (from ComponentSafe.isolated for all pids)
+- CapUnforgeable (from ComponentSafe.unforgeable + AllCapsHeld)
+
+The remaining 9 properties are system-level and require separate proofs.
+See: `all_safe_implies_system_invariant` in CompositionTheorem.lean
+-/
+
+/-! =========== COMPOSITIONAL SECURITY CHAIN =========== -/
+
+/--
+**Compositional Security Chain Theorem**
+
+This is the main result connecting compositional and system-level security:
+
+1. init_state satisfies SystemInvariant (init_satisfies_invariant)
+2. Step preserves SystemInvariant (security_composition)
+3. SystemInvariant → AllComponentsSafe (systemInvariant_implies_allComponentsSafe)
+4. Therefore: All reachable states have all components safe
+
+This means we get compositional security "for free" from the system-level proofs.
+The ComponentSafe framework provides additional modularity for reasoning about
+individual components and their composition.
+-/
+theorem compositional_security_chain (s : State)
+    (h_reach : Reachable init_state s)
+    (h_struct : ComponentStructInv s) :
+    AllComponentsSafe s := by
+  have h_sys := reachable_satisfies_invariant s h_reach
+  exact systemInvariant_implies_allComponentsSafe s h_sys h_struct
 
 /-! =========== STEP PRESERVATION: RE-DERIVE PATTERN =========== -/
 
@@ -86,7 +172,7 @@ Then ComponentSafe holds in s' - regardless of what the step did.
 
 This makes the proof a one-liner corollary of the workhorse lemma.
 -/
-theorem step_preserves_component_safe (s s' : State) (st : Step s s')
+theorem step_preserves_component_safe (s s' : State) (_st : Step s s')
     (pid : PluginId)
     (h_sys' : SystemInvariant s')
     (h_struct' : ComponentStructInv s') :

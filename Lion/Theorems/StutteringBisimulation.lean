@@ -23,41 +23,52 @@ import Lion.State.State
 import Lion.Step.Step
 import Lion.Theorems.NoninterferenceBase
 import Lion.Theorems.RuntimeTrustBundle
+import Mathlib.Logic.Relation
 
 namespace Lion.Stuttering
 
 open Lion Lion.Noninterference
 
-/-! =========== PART 1: GENERIC REFLEXIVE-TRANSITIVE CLOSURE =========== -/
+/-! =========== PART 1: REFLEXIVE-TRANSITIVE CLOSURE (Mathlib) =========== -/
 
 /--
-Reflexive-transitive closure (zero or more steps).
-This is a generic closure that works for any relation.
+Reflexive-transitive closure using Mathlib's ReflTransGen.
+This replaces our custom Star definition with the standard Mathlib version.
+
+Migration (2026-01-04, A9 Mathlib Integration):
+- Star → Relation.ReflTransGen
+- Star.refl → ReflTransGen.refl
+- Star.tail → ReflTransGen.tail
+- Star.trans → ReflTransGen.trans
+- Star.single → ReflTransGen.single
+- Star.cons → ReflTransGen.head
 -/
-inductive Star {α : Type} (r : α → α → Prop) : α → α → Prop where
-  | refl (a : α) : Star r a a
-  | tail {a b c : α} : Star r a b → r b c → Star r a c
+abbrev Star {α : Type} (r : α → α → Prop) := Relation.ReflTransGen r
 
 namespace Star
 
-/-- Transitivity of Star -/
+/-- Reflexivity of Star (delegate to ReflTransGen.refl) -/
+theorem refl {α : Type} {r : α → α → Prop} (a : α) : Star r a a :=
+  Relation.ReflTransGen.refl
+
+/-- Tail constructor of Star (delegate to ReflTransGen.tail) -/
+theorem tail {α : Type} {r : α → α → Prop} {a b c : α}
+    (hab : Star r a b) (hbc : r b c) : Star r a c :=
+  Relation.ReflTransGen.tail hab hbc
+
+/-- Transitivity of Star (delegate to ReflTransGen.trans) -/
 theorem trans {α : Type} {r : α → α → Prop} {a b c : α} :
-    Star r a b → Star r b c → Star r a c := by
-  intro hab hbc
-  induction hbc with
-  | refl => exact hab
-  | tail hbc' hstep ih => exact Star.tail ih hstep
+    Star r a b → Star r b c → Star r a c :=
+  Relation.ReflTransGen.trans
 
-/-- Single step implies Star -/
+/-- Single step implies Star (delegate to ReflTransGen.single) -/
 theorem single {α : Type} {r : α → α → Prop} {a b : α} (h : r a b) : Star r a b :=
-  Star.tail (Star.refl a) h
+  Relation.ReflTransGen.single h
 
-/-- Prepend a step to Star -/
+/-- Prepend a step to Star (delegate to ReflTransGen.head) -/
 theorem cons {α : Type} {r : α → α → Prop} {a b c : α}
-    (h : r a b) (hbc : Star r b c) : Star r a c := by
-  induction hbc with
-  | refl => exact Star.single h
-  | tail _ hstep ih => exact Star.tail ih hstep
+    (h : r a b) (hbc : Star r b c) : Star r a c :=
+  Relation.ReflTransGen.head h hbc
 
 end Star
 

@@ -1,6 +1,6 @@
 # Lion Formal Verification - Trusted Computing Base (TCB)
 
-**Version**: 2.0 **Date**: 2026-01-03 **Status**: END-TO-END CORRECTNESS PROVEN ✓
+**Version**: 2.1 (Open Source) **Date**: 2026-01-05 **Status**: END-TO-END CORRECTNESS PROVEN ✓
 
 ---
 
@@ -10,7 +10,10 @@ Lion is a **formally verified security architecture** for a capability-based
 microkernel. This document defines what we PROVE vs what we ASSUME (the Trusted
 Computing Base).
 
-**MILESTONE ACHIEVED (2026-01-03)**: End-to-End Correctness Proof Complete
+**Open Source Release**: This is the abstract specification layer. Refinement proofs
+connecting to implementation are not included.
+
+**MILESTONE ACHIEVED**: End-to-End Correctness Proof Complete
 
 ```lean
 theorem any_reachable_from_init_is_secure (s : State) (h : Reachable init_state s) :
@@ -19,7 +22,7 @@ theorem any_reachable_from_init_is_secure (s : State) (h : Reachable init_state 
 
 **What We Prove (Machine-Checked)**:
 
-- **End-to-End Correctness** (v1 ch5.3 - capstone theorem)
+- **End-to-End Correctness** (capstone theorem)
 - Complete Mediation (type-level enforcement via `Authorized` witness)
 - Confinement (semilattice algebra - rights cannot amplify)
 - Unforgeability (game-based cryptographic reduction)
@@ -199,17 +202,14 @@ WASM plugin system.
 
 ### 3.2 Implementation Bugs
 
-The Lean proofs verify the **specification**, not the implementation. Refinement proofs
-to Rust code are in progress.
+The Lean proofs verify the **specification**, not the implementation.
 
-**Status (2026-01-02)**:
+**Open Source Scope**: This release contains the abstract specification and proofs.
+Refinement proofs connecting to implementation are not included.
 
-- RuntimeCorrespondence expanded to 9 fields (full-state coverage)
-- HostCallFootprint framework for systematic preservation proofs
-- Opaque trust boundary established (Rust types declared, correspondence axiomatized)
-
-**Gap**: Until refinement chain is complete, bugs in the Rust kernel, WASM plugin host,
-or FFI bindings could violate security properties even with correct specifications.
+**Gap**: Bugs in the Rust kernel, WASM plugin host, or FFI bindings could violate
+security properties even with correct specifications. The specification proves
+*what* security means; implementation verification proves *that* the code does it.
 
 ### 3.3 Side-Channel Attacks
 
@@ -231,8 +231,7 @@ We assume:
 
 ## 4. Axiom Audit Summary
 
-**Current Status**: 3 true trust bundles (down from ~28 individual axioms) ✅ TARGET
-ACHIEVED
+**Current Status**: 9 axioms in 3 trust bundles ✅
 
 ### 4.1 The Three Trust Bundles
 
@@ -241,6 +240,9 @@ ACHIEVED
 | `CryptoTrustBundle`  | Crypto         | `cap_mac_security`, `seal_assumptions`, `hash_assumptions`                                 | LOW    |
 | `RuntimeTrustBundle` | Runtime        | `runtime_isolation`, `low_step_determinism_axiom`, `message_delivery_assumptions`          | MEDIUM |
 | `RuntimeBridge`      | Correspondence | `rust_type_instances`, `initial_correspondence_bundle`, `runtime_correspondence_preserved` | MEDIUM |
+
+**Note**: RuntimeBridge axioms define the interface for future binary validation.
+They are not exercised in this open source release (no refinement proofs included).
 
 #### 4.1.1 CryptoTrustBundle (Lion/Theorems/Unforgeability.lean)
 
@@ -276,32 +278,22 @@ Components:
 
 #### 4.1.3 RuntimeBridge (Lion/Contracts/RuntimeCorrespondence.lean)
 
-Rust↔Lean full-state correspondence (9 fields).
+**Interface for future binary validation** (not exercised in open source release).
+
+These axioms define the correspondence interface between Lean specifications and
+Rust implementation. They are included for completeness but the refinement proofs
+that use them are not part of this release.
 
 ```lean
 structure RuntimeBridge : Type 1 where
-  type_instances : RustTypeInstances         -- 8 Rust types inhabited
+  type_instances : RustTypeInstances         -- Rust types are inhabited
   initial : InitialCorrespondence            -- Initial states correspond
   preserved : ∀ rs rs' ls, ...               -- Steps preserve correspondence
-
--- RuntimeCorrespondence covers full state (expanded 2026-01-02):
-structure RuntimeCorrespondence (rs : RustState) (ls : State) : Prop where
-  memory    : ∀ pid, rust_memory_corresponds ...   -- Plugin memory
-  kernel    : rust_kernel_corresponds ...          -- Kernel state
-  time_sync : rust_time rs = ls.time               -- Time
-  levels    : ∀ pid, rust_level_corresponds ...    -- Security levels
-  heldCaps  : ∀ pid, rust_heldCaps_corresponds ... -- Held capabilities
-  actors    : ∀ aid, rust_actor_corresponds ...    -- Actor runtime
-  resources : rust_resources_corresponds ...       -- Resources
-  workflows : rust_workflows_corresponds ...       -- Workflows
-  ghost     : rust_ghost_consistent ...            -- Allocator state
 ```
 
-**Opaque Types** (trust boundary - implemented in Rust):
+**Opaque Types** (trust boundary - would be implemented in Rust):
 
-- `RustState`, `RustKernelState`, `RustPluginMemory`
-- `RustPluginLevel`, `RustHeldCaps`, `RustActorRuntime`
-- `RustResources`, `RustWorkflows`, `RustGhostView`
+- `RustState`, `RustKernelState`, `RustPluginMemory`, etc.
 
 ### 4.2 Underlying Axiom Count
 
@@ -328,7 +320,7 @@ $ grep -rn "sorry" Lion/ --include="*.lean" | wc -l
 0
 ```
 
-**26,285 lines** of Lean, **3,143 build jobs**, **9 axioms**.
+**~24,000 lines** of Lean, **3,139 build jobs**, **9 axioms**.
 
 ### 4.4 Converted to Theorems (No Longer Axioms)
 
@@ -392,31 +384,29 @@ categories.
 
 ## 6. Comparison to Other Verified Systems
 
-| Aspect              | Lion              | seL4             | CertiKOS   |
-| ------------------- | ----------------- | ---------------- | ---------- |
-| Proof Assistant     | Lean4             | Isabelle/HOL     | Coq        |
-| LOC Proven          | 26,285            | ~200,000         | ~100,000   |
-| LOC Verified (impl) | 0 (spec only)     | 8,830 C          | 6,500 C    |
-| End-to-End Proof    | ✓ Complete        | ✓ Complete       | ✓ Complete |
-| Refinement Proofs   | Partial (9 axiom) | 4-layer          | Layered    |
-| Binary Verification | No                | Yes (ARM/RISC-V) | Partial    |
-| Person-Years        | <1                | 25+              | 10+        |
-| Crypto Integration  | Yes (HMAC)        | Abstracted       | Abstracted |
-| Axiom Count         | 9                 | ~50              | ~30        |
+| Aspect              | Lion (Open Source) | seL4             | CertiKOS   |
+| ------------------- | ------------------ | ---------------- | ---------- |
+| Proof Assistant     | Lean4              | Isabelle/HOL     | Coq        |
+| LOC Proven          | ~24,000            | ~200,000         | ~100,000   |
+| LOC Verified (impl) | 0 (spec only)      | 8,830 C          | 6,500 C    |
+| End-to-End Proof    | ✓ Complete         | ✓ Complete       | ✓ Complete |
+| Refinement Proofs   | Not included       | 4-layer          | Layered    |
+| Binary Verification | No                 | Yes (ARM/RISC-V) | Partial    |
+| Crypto Integration  | Yes (HMAC)         | Abstracted       | Abstracted |
+| Axiom Count         | 9                  | ~50              | ~30        |
 
 **Lion's Position**: Complete specification-level verification with end-to-end
-correctness proof. Analogous to seL4's abstract specification layer - refinement
-chain to Rust implementation is the next milestone.
+correctness proof. This open source release is analogous to seL4's abstract
+specification layer.
 
 ---
 
-## 7. Future Work
+## 7. Future Work (Not in Open Source Release)
 
-1. **Refinement Proofs**: Complete Rust↔Lean correspondence (currently 9 axioms)
+1. **Refinement Proofs**: Rust↔Lean correspondence connecting spec to implementation
 2. **Hardware Model**: Cache, TLB, DMA considerations
 3. **TSNI**: Timing-sensitive noninterference for high-security contexts
-4. **Test Suite**: Property-based tests matching Lean properties
-5. **Peer Review**: External validation of proof structure and axiom minimality
+4. **Property Tests**: Property-based tests matching Lean properties
 
 ---
 
@@ -451,5 +441,5 @@ chain to Rust implementation is the next milestone.
 | 2026-01-03 | Added policy distributivity laws (Kleene three-valued logic completeness)                                |
 | 2026-01-03 | Added PolicyWorkflowBridge.lean (Track A ↔ Track B connection, 523 lines)                                |
 | 2026-01-03 | **END-TO-END CORRECTNESS PROVEN** - EndToEnd.lean capstone theorem (269 lines)                           |
-| 2026-01-03 | Eliminated all sorries (0 remaining in 26,285 lines)                                                     |
-| 2026-01-03 | TCB v2.0 - Documentation updated for open source release                                                 |
+| 2026-01-03 | Eliminated all sorries (0 remaining)                                                                     |
+| 2026-01-05 | TCB v2.1 - Open source release (refinement layer removed, ~24k lines)                                    |
