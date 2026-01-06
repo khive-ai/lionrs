@@ -6,7 +6,7 @@ package «lionrs» where
   preferReleaseBuild := true
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git" @ "v4.23.0"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.25.2"
 
 -- Lion microkernel formal proofs
 @[default_target]

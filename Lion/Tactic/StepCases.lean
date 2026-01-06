@@ -58,12 +58,13 @@ initialize stepRuleAttr : ParametricAttribute Name ← registerParametricAttribu
     filtering for entries where the parameter matches ctorName. -/
 def getStepRulesFor (ctorName : Name) : TacticM (List Name) := do
   let env ← getEnv
-  -- Get local entries from the extension state (NameMap Name)
+  -- Get the TreeMap from the extension state
   let state := stepRuleAttr.ext.getState env
   -- Filter entries where the parameter (constructor name) matches
-  -- Using foldl instead of deprecated fold
-  let localMatches := state.foldl (init := []) fun acc declName param =>
-    if param == ctorName then declName :: acc else acc
+  -- state is a TreeMap Name Name, convert to list and filter
+  let entries := state.toList
+  let localMatches := entries.filterMap fun (declName, param) =>
+    if param == ctorName then some declName else none
   return localMatches
 
 /-- Apply the appropriate @[step_rule] lemma for the current goal.

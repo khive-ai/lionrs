@@ -239,7 +239,7 @@ def IsBounded (wi : WorkflowInstance) : Prop :=
 theorem bounded_measure (wi : WorkflowInstance) (now : Time)
     (_h_bounded : IsBounded wi) :
     ∃ (M : Nat), workflow_measure now wi ≤ M := by
-  exists workflow_measure now wi
+  exact ⟨workflow_measure now wi, Nat.le_refl _⟩
 
 /-- The initial measure of a sequential composition is bounded by component measures -/
 theorem sequential_measure_bound (_wf₁ _wf₂ : WorkflowDef)
