@@ -449,7 +449,8 @@ preserves held capabilities.
 -/
 theorem composition_identity_right_caps (A : Component) (pid : PluginId) (level : SecurityLevel) :
     (A ⊕ Component.identity pid level).heldCapIds = A.heldCapIds := by
-  simp only [Component.compose, Component.identity, Finset.union_empty]
+  simp only [Component.compose, Component.identity]
+  simp
 
 /--
 **C2: Composition Identity (Left) - Capability Preservation**
@@ -459,7 +460,8 @@ yields the right component's capabilities (since left is host).
 -/
 theorem composition_identity_left_caps (B : Component) (pid : PluginId) (level : SecurityLevel) :
     (Component.identity pid level ⊕ B).heldCapIds = B.heldCapIds := by
-  simp only [Component.compose, Component.identity, Finset.empty_union]
+  simp only [Component.compose, Component.identity]
+  simp
 
 /--
 **C1: Composition Associativity (Capability Sets)**

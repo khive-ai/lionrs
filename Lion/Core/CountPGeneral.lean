@@ -305,11 +305,12 @@ theorem start_measure_decreases_general
   have h_key : (pending_old - pending_new) * 1000 > (active_new - active_old) * 100 := by
     -- d * 1000 >= r * 1000 (since d >= r)
     -- r * 1000 > r * 100 (since r >= 1 and 1000 > 100)
-    calc (pending_old - pending_new) * 1000
-        ≥ (active_new - active_old) * 1000 := Nat.mul_le_mul_right 1000 h_balance
-      _ > (active_new - active_old) * 100 := by
-          have : active_new - active_old ≥ 1 := h_r_pos
-          omega
+    have h1 : (pending_old - pending_new) * 1000 ≥ (active_new - active_old) * 1000 :=
+      Nat.mul_le_mul_right 1000 h_balance
+    have h2 : (active_new - active_old) * 1000 > (active_new - active_old) * 100 := by
+      have : active_new - active_old ≥ 1 := h_r_pos
+      omega
+    omega
   omega
 
 /--
@@ -389,7 +390,7 @@ theorem foldl_add_strict_decrease_of_single [DecidableEq α]
         intro x hx
         by_cases hxa : x = a
         · rw [hxa]; exact Nat.le_of_lt h_dec
-        · rw [h_unchanged x (List.mem_cons.mpr (Or.inr hx)) hxa]
+        · exact Nat.le_of_eq (h_unchanged x (List.mem_cons.mpr (Or.inr hx)) hxa)
       -- Use foldl_add_offset to rewrite
       rw [foldl_add_offset tl g (0 + g hd), foldl_add_offset tl f (0 + f hd)]
       have h_le : tl.foldl (fun acc x => acc + g x) 0 ≤ tl.foldl (fun acc x => acc + f x) 0 :=
